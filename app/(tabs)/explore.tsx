@@ -13,33 +13,30 @@ import { StatusBar } from "expo-status-bar";
 import DraggableFlatList, { OpacityDecorator, RenderItemParams, ScaleDecorator, ShadowDecorator } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-const TASKS = [{
-  id: 1,
-  description: "Task 1",
-  position: 1,
-}, {
-  id: 2,
-  description: "Task 2",
-  position: 2,
-}]
+
+const TASKS = Array.from({ length: 5000 }, (_, index) => ({
+  id: index + 1,
+  description: `Task ${index + 1}`,
+  position: index + 1,
+}));
 
 const TaskListItem = ({ task, drag, isActive }) => {
   return (
     <OpacityDecorator activeOpacity={0.9}>
       <ScaleDecorator activeScale={1.05}>
-    <TouchableOpacity
-      style={[
-        styles.taskItem,
-        { backgroundColor: isActive ? '#2C3E50' : '#1D2125' }
-      ]}
-      onLongPress={drag}
-    >
-      <ThemedText lightColor="white" darkColor="white">{task.description}</ThemedText>
-      <TouchableOpacity onPressIn={drag} style={styles.dragHandle}>
-        <Text style={styles.dragHandleText}>≡</Text>
-      </TouchableOpacity>
-    </TouchableOpacity>
-    </ScaleDecorator>
+        <View
+          style={[
+            styles.taskItem,
+            { backgroundColor: isActive ? '#2C3E50' : '#1D2125' }
+          ]}
+        //onLongPress={drag}
+        >
+          <ThemedText lightColor="white" darkColor="white">{task.description}</ThemedText>
+          <TouchableOpacity onPressIn={drag} style={styles.dragHandle}>
+            <Text style={styles.dragHandleText}>≡</Text>
+          </TouchableOpacity>
+        </View>
+      </ScaleDecorator>
     </OpacityDecorator>
   );
 };
@@ -76,7 +73,7 @@ export default function TaskList() {
     const id = tasks.length + 1;
 
     setTasks([...tasks, {
-      id ,
+      id,
       description: newTask,
       position: tasks.length + 1,
     }]);
@@ -86,6 +83,8 @@ export default function TaskList() {
   const renderItem = ({ item, drag, isActive }: RenderItemParams<typeof item>) => (
     <TaskListItem task={item} drag={drag} isActive={isActive} />
   );
+
+  const [scrollEnable, setScrollEnable] = useState(false);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -97,7 +96,13 @@ export default function TaskList() {
           data={tasks}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
-          onDragEnd={({ data }) => setTasks(data)}
+          onDragBegin={() => setScrollEnable(false)}
+          onDragEnd={({ data }) => {
+            setTasks(data)
+            setScrollEnable(true);
+          }}
+          activationDistance={scrollEnable ? 100 : 1}
+          autoscrollSpeed={200}
         />
 
         {/* New task input */}
@@ -145,6 +150,7 @@ const styles = StyleSheet.create({
   },
   dragHandle: {
     padding: 10,
+    backgroundColor: 'red',
   },
   dragHandleText: {
     color: 'white',
